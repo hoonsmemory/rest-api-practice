@@ -2,6 +2,7 @@ package me.hoon.restapipractice.events;
 
 import lombok.*;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
@@ -13,7 +14,11 @@ import java.time.LocalDateTime;
  */
 @Getter @Setter @EqualsAndHashCode(of = "id")
 @Builder @AllArgsConstructor @NoArgsConstructor
+@Entity
 public class Event {
+
+    @Id
+    @GeneratedValue
     private Integer id;
     private String name;
     private String description;
@@ -27,5 +32,8 @@ public class Event {
     private int limitOfEnrollment;
     private boolean offline;
     private boolean free;
+
+    //ORDINAL 을 사용할 경우 enum 의 순서가 바뀔 시 값도 변경될 수 있으므로 STRING 으로 사용하는게 좋다.
+    @Enumerated(value = EnumType.STRING)
     private EventStatus eventStatus = EventStatus.DRAFT;
 }
