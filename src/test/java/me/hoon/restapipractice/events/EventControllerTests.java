@@ -35,8 +35,35 @@ public class EventControllerTests {
     @Autowired
     ObjectMapper objectMapper;
 
+
     @Test
     public void createEvent() throws Exception {
+        EventDto eventDto = EventDto.builder()
+                .name("Event Bean")
+                .description("Event Bean create Test")
+                .beginEnrollmentDateTime(LocalDateTime.of(2022, 8, 26, 14, 00))
+                .closeEnrollmentDateTime(LocalDateTime.of(2022, 9, 1, 15, 00))
+                .beginEventDateTime(LocalDateTime.of(2022, 8, 26, 14, 00))
+                .endEventDateTime(LocalDateTime.of(2022, 9, 1, 15, 00))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("REST API 오프라인 강의")
+                .build();
+
+        mockMvc.perform(post("/api/events/")
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(eventDto)))
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE));
+    }
+
+    @Test
+    public void createEvent_bad_request() throws Exception {
         Event event = Event.builder()
                 .id(100)
                 .name("Event Bean")
@@ -59,12 +86,6 @@ public class EventControllerTests {
                         .accept(MediaTypes.HAL_JSON)
                         .content(objectMapper.writeValueAsString(event)))
                 .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("id").exists())
-                .andExpect(header().exists(HttpHeaders.LOCATION))
-                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("id").value(Matchers.not(100)))
-                .andExpect(jsonPath("free").value(Matchers.not(true)));
-                //.andExpect(jsonPath("eventStatus").value((EventStatus.DRAFT)));
+                .andExpect(status().isBadRequest());
     }
 }
