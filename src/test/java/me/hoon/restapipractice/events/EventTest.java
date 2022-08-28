@@ -1,11 +1,15 @@
 package me.hoon.restapipractice.events;
 
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+
 
 import static org.assertj.core.api.Assertions.*;
 
-
+@RunWith(JUnitParamsRunner.class)
 public class EventTest {
 
     @Test
@@ -18,36 +22,25 @@ public class EventTest {
         assertThat(event).isNotNull();
     }
 
+    private Object[] paramsForTest() {
+        return new Object[] {
+                new Object[] {0 ,0 , true},
+                new Object[] {100, 0, false},
+                new Object[] {0, 1000, false},
+        };
+    }
+
     @Test
-    public void freeTest() {
+    @Parameters(method = "paramsForTest")
+    public void freeTest(int baePrice, int maxPrice, boolean free) {
         //basePrice = 0, maxPrice = 0
         Event event1 = Event.builder()
-                .basePrice(0)
-                .maxPrice(0)
+                .basePrice(baePrice)
+                .maxPrice(maxPrice)
                 .build();
 
         event1.checkFreeAndLocation();
-        assertThat(event1.isFree()).isTrue();
-
-
-        //basePrice = 100, maxPrice = 0
-        Event event2 = Event.builder()
-                .basePrice(100)
-                .maxPrice(0)
-                .build();
-
-        event2.checkFreeAndLocation();
-        assertThat(event2.isFree()).isFalse();
-
-
-        //basePrice = 0, maxPrice = 1000
-        Event event3 = Event.builder()
-                .basePrice(0)
-                .maxPrice(1000)
-                .build();
-
-        event3.checkFreeAndLocation();
-        assertThat(event3.isFree()).isFalse();
+        assertThat(event1.isFree()).isEqualTo(free);
     }
 
     @Test
