@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
@@ -45,7 +46,12 @@ public class EventController {
         event.checkFreeAndLocation();
         Event savedEvent = eventRepository.save(event);
 
-        URI createURI = linkTo(EventController.class).slash(savedEvent.getId()).toUri();
-        return ResponseEntity.created(createURI).body(event);
+        ControllerLinkBuilder controllerLinkBuilder = linkTo(EventController.class).slash(savedEvent.getId());
+        URI createURI = controllerLinkBuilder.toUri();
+
+        EventResource eventResource = new EventResource(event);
+        eventResource.add(linkTo(EventController.class).withRel("query-events"));
+        eventResource.add(controllerLinkBuilder.withRel("update-event"));
+        return ResponseEntity.created(createURI).body(eventResource);
     }
 }
