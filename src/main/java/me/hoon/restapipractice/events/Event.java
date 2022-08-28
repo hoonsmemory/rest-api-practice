@@ -48,7 +48,7 @@ public class Event {
         if(this.location == null || this.location.isBlank()) {
             this.offline = false;
         } else {
-            this.free = true;
+            this.offline = true;
         }
     }
 }
