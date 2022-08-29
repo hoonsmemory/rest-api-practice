@@ -7,12 +7,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.Link;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.Errors;
@@ -40,12 +38,12 @@ public class EventController {
     public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors) {
 
         if(errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(new ErrorsResource(errors));
+            return badRequest(errors);
         }
 
-        eventValidator.eventCreateValidate(eventDto, errors);
+        eventValidator.validate(eventDto, errors);
         if(errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(new ErrorsResource(errors));
+            return badRequest(errors);
         }
 
 
@@ -83,5 +81,43 @@ public class EventController {
         }
 
         return ResponseEntity.ok(new EventResource(event.get()));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity editEvent(@PathVariable("id") Integer id,
+                                    @RequestBody @Valid EventDto eventDto,
+                                    Errors errors) {
+
+        //id 에 해당하는 값이 있는지 체크
+        Optional<Event> optionalEvent = eventRepository.findById(id);
+        if(optionalEvent.isEmpty()) {
+            errors.reject("null.event.object", null);
+        }
+
+        //DTO Validation 체크
+        if(errors.hasErrors()) {
+            return badRequest(errors);
+        }
+
+        //Event Validation 체크
+        eventValidator.validate(eventDto, errors);
+        if(errors.hasErrors()) {
+            return badRequest(errors);
+        }
+
+        //eventDto to event
+        Event event = optionalEvent.get();
+        modelMapper.map(eventDto, event);
+
+        //save
+        Event savedEvent = eventRepository.save(event);
+
+        //return
+        EventResource eventResource = new EventResource(savedEvent);
+        return ResponseEntity.ok(eventResource);
+    }
+
+    private static ResponseEntity<ErrorsResource> badRequest(Errors errors) {
+        return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
 }
