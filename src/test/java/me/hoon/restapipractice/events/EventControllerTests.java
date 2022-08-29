@@ -3,6 +3,7 @@ package me.hoon.restapipractice.events;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,8 +13,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,7 +41,13 @@ public class EventControllerTests {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    private ModelMapper modelMapper;
 
+    @Autowired
+    EventRepository eventRepository;
+
+    //정상 저장
     @Test
     public void createEvent() throws Exception {
         EventDto eventDto = EventDto.builder()
@@ -69,6 +79,8 @@ public class EventControllerTests {
                 .andDo(document("create-event"));
     }
 
+    //입력값 외에 데이터가 들어오면 에러 발생
+    //spring.jackson.deserialization.fail-on-unknown-properties=true
     @Test
     public void createEvent_bad_request() throws Exception {
         Event event = Event.builder()
@@ -96,6 +108,7 @@ public class EventControllerTests {
                 .andExpect(status().isBadRequest());
     }
 
+    //입력값 없이 저장 시 에러 발생
     @Test
     public void createEvent_Bad_Request_Empty_Input() throws Exception {
         EventDto eventDto = EventDto.builder().build();
@@ -107,6 +120,7 @@ public class EventControllerTests {
                 .andExpect(status().isBadRequest());
     }
 
+    //Validation 테스트( basePrice 가 maxPrice 보다 클 경우 에러 발생)
     @Test
     public void createEvent_Bad_Request_Wrong_Input() throws Exception {
         EventDto eventDto = EventDto.builder()
@@ -135,4 +149,40 @@ public class EventControllerTests {
                 .andExpect(jsonPath("_links.index").exists())
         ;
     }
+
+    //30개의 이벤트를 10개씩 두번째 페이지 조회하기
+    @Test
+    public void queryEvents() throws Exception {
+        IntStream.range(0, 30).forEach( i -> createEvents(i));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/events")
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("sort", "name,DESC"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+        ;
+    }
+
+    private void createEvents(int index) {
+        EventDto eventDto = EventDto.builder()
+                .name("event" + index)
+                .description("test event" + index)
+                .build();
+
+        Event event = modelMapper.map(eventDto, Event.class);
+        eventRepository.save(event);
+    }
+
+    //event 단건 조회
+    @Test
+    public void getEvent() {
+
+    }
+
+
+
 }
