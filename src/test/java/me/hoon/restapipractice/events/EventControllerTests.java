@@ -1,6 +1,8 @@
 package me.hoon.restapipractice.events;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.modelmapper.ModelMapper;
@@ -20,9 +22,11 @@ import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @RunWith(SpringRunner.class)
 //@WebMvcTest //웹 관련 빈만 등록해 준다. (슬라이스), Repository 관련 Bean 은 Mocking, stubbing 해야한다.
@@ -42,7 +46,7 @@ public class EventControllerTests {
     ObjectMapper objectMapper;
 
     @Autowired
-    private ModelMapper modelMapper;
+    ModelMapper modelMapper;
 
     @Autowired
     EventRepository eventRepository;
@@ -155,7 +159,7 @@ public class EventControllerTests {
     public void queryEvents() throws Exception {
         IntStream.range(0, 30).forEach( i -> createEvents(i));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/events")
+        mockMvc.perform(get("/api/events")
                         .param("page", "1")
                         .param("size", "10")
                         .param("sort", "name,DESC"))
@@ -167,6 +171,19 @@ public class EventControllerTests {
         ;
     }
 
+    //event 단건 조회
+    @Test
+    public void getEvent() throws Exception {
+        Integer id = 1;
+        createEvents(id);
+        mockMvc.perform(get("/api/events/{id}", id))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").value(id))
+                .andExpect(jsonPath("name").value("event" + id))
+        ;
+    }
+
     private void createEvents(int index) {
         EventDto eventDto = EventDto.builder()
                 .name("event" + index)
@@ -175,12 +192,6 @@ public class EventControllerTests {
 
         Event event = modelMapper.map(eventDto, Event.class);
         eventRepository.save(event);
-    }
-
-    //event 단건 조회
-    @Test
-    public void getEvent() {
-
     }
 
 
