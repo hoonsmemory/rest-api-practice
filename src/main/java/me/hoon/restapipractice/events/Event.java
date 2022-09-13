@@ -1,6 +1,7 @@
 package me.hoon.restapipractice.events;
 
 import lombok.*;
+import me.hoon.restapipractice.accounts.Account;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -36,6 +37,9 @@ public class Event {
     //ORDINAL 을 사용할 경우 enum 의 순서가 바뀔 시 값도 변경될 수 있으므로 STRING 으로 사용하는게 좋다.
     @Enumerated(value = EnumType.STRING)
     private EventStatus eventStatus = EventStatus.DRAFT;
+
+    @ManyToOne
+    private Account manager;
 
     //금액 무료, 장소 체크
     public void checkFreeAndLocation() {
