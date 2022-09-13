@@ -36,6 +36,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         해당 AuthenticationManager 를 참조할 수 있도록 bean 으로 노출
      */
     @Override
+    @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
@@ -65,7 +66,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin()
                 .and()
                 .authorizeRequests()
-                .mvcMatchers(HttpMethod.GET, "/api/**").authenticated()
+                .mvcMatchers(HttpMethod.GET, "/api/**").anonymous()
                 .anyRequest().authenticated();
     }
 }
