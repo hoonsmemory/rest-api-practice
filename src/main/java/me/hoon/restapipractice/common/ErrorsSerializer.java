@@ -32,6 +32,19 @@ public class ErrorsSerializer extends JsonSerializer<Errors> {
                 e1.printStackTrace();
             }
         });
+
+        errors.getGlobalErrors().forEach(e -> {
+            try {
+                jsonGenerator.writeStartObject();
+                jsonGenerator.writeStringField("objectName", e.getObjectName());
+                jsonGenerator.writeStringField("code", e.getCode());
+                jsonGenerator.writeStringField("getDefaultMessage", e.getDefaultMessage());
+                jsonGenerator.writeEndObject();;
+            } catch(IOException e1) {
+                e1.printStackTrace();
+            }
+        });
+
         jsonGenerator.writeEndArray();
     }
 }
